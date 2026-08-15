@@ -2426,16 +2426,32 @@ struct ToolResultAgingSnapshot: Decodable {
 
 struct ToolResultAgingStats: Decodable {
   let requests: Int?
+  let evaluatedRequests: Int?
+  let largestResultBytes: Int?
   let resultsAged: Int?
   let bytesSaved: Int?
   let estimatedTokensSaved: Int?
   let ranges: [String: ToolResultAgingRange]?
 
   var savingsSummary: String? {
-    guard let requests, requests > 0, let estimatedTokensSaved, let bytesSaved else { return nil }
+    guard let requests, requests > 0, let estimatedTokensSaved, let bytesSaved else {
+      // Enabled and running, but nothing qualified. Saying nothing here reads
+      // as "the toggle did nothing" -- the exact ambiguity that sent an
+      // operator hunting for a hook that was loaded the whole time. Report the
+      // largest result seen so the gap to the floor is visible.
+      guard let evaluatedRequests, evaluatedRequests > 0 else { return nil }
+      let largest = Self.compactBytes(largestResultBytes ?? 0)
+      return "No result over 32 KB in \(evaluatedRequests) requests (largest \(largest))"
+    }
     let tokens = Self.compactCount(estimatedTokensSaved)
     let megabytes = String(format: "%.1f", Double(bytesSaved) / 1_048_576)
     return "Saved ~\(tokens) tokens (\(megabytes) MB) across \(requests) requests"
+  }
+
+  static func compactBytes(_ value: Int) -> String {
+    if value >= 1_048_576 { return String(format: "%.1f MB", Double(value) / 1_048_576) }
+    if value >= 1_024 { return String(format: "%.0f KB", Double(value) / 1_024) }
+    return "\(value) B"
   }
 
   static func compactCount(_ value: Int) -> String {
