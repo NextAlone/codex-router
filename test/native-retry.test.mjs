@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 import { zstdDecompressSync } from "node:zlib";
 
 import { callerBaseUrl } from "../src/caller-auth.mjs";
-import { fetchWithRetry } from "../src/upstream-retry.mjs";
+import {
+  DEFAULT_NATIVE_RETRY_BUDGET_MS,
+  fetchWithRetry,
+} from "../src/upstream-retry.mjs";
 import { openPort } from "./port-pool.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -496,6 +499,35 @@ test("pre-connection failures added after #171 are retried", async () => {
     assert.equal(calls, 2, `${code} was not retried`);
     assert.equal(retried.response.status, 200);
   }
+});
+
+test("the default budget retries a TLS reset that arrives after five seconds", async () => {
+  let calls = 0;
+  let clock = 0;
+  const retried = await fetchWithRetry(
+    "http://upstream.invalid/responses",
+    {},
+    {
+      retries: 1,
+      backoffMs: 0,
+      budgetMs: DEFAULT_NATIVE_RETRY_BUDGET_MS,
+      now: () => clock,
+      fetchImpl: async () => {
+        calls += 1;
+        if (calls === 1) {
+          clock += 5_100;
+          const error = new TypeError("fetch failed");
+          error.cause = Object.assign(new Error("socket reset"), { code: "ECONNRESET" });
+          throw error;
+        }
+        return new Response("ok", { status: 200 });
+      },
+    },
+  );
+  assert.equal(DEFAULT_NATIVE_RETRY_BUDGET_MS, 15_000);
+  assert.equal(calls, 2);
+  assert.equal(retried.retries, 1);
+  assert.equal(retried.response.status, 200);
 });
 
 // A 504 the edge spent half a minute producing is still a 504, but retrying it

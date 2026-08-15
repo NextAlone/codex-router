@@ -22,10 +22,11 @@ const DEFAULT_BACKOFF_MS = 250;
 // to stay small enough that the product is still a fast failure.
 const BACKOFF_FACTOR = 3;
 // Retry only while the request has been cheap so far. Most of the retryable
-// failures below arrive in milliseconds, but two do not: a 504 the edge spent
-// half a minute producing, and a connect timeout. Tripling either turns a slow
-// failure into a hang, which is worse than the 503 this exists to absorb.
-const DEFAULT_BUDGET_MS = 5_000;
+// failures below arrive in milliseconds, but native TLS resets have also been
+// observed just after five seconds. Fifteen seconds admits those resets while
+// still refusing a 504 the edge spent half a minute producing; retrying that
+// would turn a slow failure into a hang.
+export const DEFAULT_NATIVE_RETRY_BUDGET_MS = 15_000;
 const MAX_RETRIES = 5;
 const MAX_BACKOFF_MS = 5_000;
 const MAX_BUDGET_MS = 60_000;
@@ -51,7 +52,7 @@ export const NATIVE_RETRY_BACKOFF_MS = clampedInteger(
 );
 export const NATIVE_RETRY_BUDGET_MS = clampedInteger(
   process.env.CODEX_ROUTER_NATIVE_RETRY_BUDGET_MS,
-  DEFAULT_BUDGET_MS,
+  DEFAULT_NATIVE_RETRY_BUDGET_MS,
   0,
   MAX_BUDGET_MS,
 );

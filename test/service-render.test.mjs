@@ -110,6 +110,63 @@ test("background service definitions render for macOS, Linux, and Windows", () =
   }
 });
 
+test("background services persist native retry settings", () => {
+  const testRoot = mkdtempSync(path.join(os.tmpdir(), "codex-router-retry-services-"));
+  const retryEnv = {
+    CODEX_ROUTER_NATIVE_RETRIES: "3",
+    CODEX_ROUTER_NATIVE_RETRY_BACKOFF_MS: "400",
+    CODEX_ROUTER_NATIVE_RETRY_BUDGET_MS: "17000",
+  };
+  try {
+    const launchd = serviceCommand(
+      "service-macos.mjs",
+      "darwin",
+      testRoot,
+      "render",
+      "codex",
+      root,
+      retryEnv,
+    );
+    assert.match(launchd, /<key>CODEX_ROUTER_NATIVE_RETRIES<\/key>\n    <string>3<\/string>/);
+    assert.match(
+      launchd,
+      /<key>CODEX_ROUTER_NATIVE_RETRY_BACKOFF_MS<\/key>\n    <string>400<\/string>/,
+    );
+    assert.match(
+      launchd,
+      /<key>CODEX_ROUTER_NATIVE_RETRY_BUDGET_MS<\/key>\n    <string>17000<\/string>/,
+    );
+
+    const systemd = serviceCommand(
+      "service-linux.mjs",
+      "linux",
+      testRoot,
+      "render",
+      "codex",
+      root,
+      retryEnv,
+    );
+    assert.match(systemd, /Environment="CODEX_ROUTER_NATIVE_RETRIES=3"/);
+    assert.match(systemd, /Environment="CODEX_ROUTER_NATIVE_RETRY_BACKOFF_MS=400"/);
+    assert.match(systemd, /Environment="CODEX_ROUTER_NATIVE_RETRY_BUDGET_MS=17000"/);
+
+    const windows = serviceCommand(
+      "service-windows.mjs",
+      "win32",
+      testRoot,
+      "render",
+      "codex",
+      root,
+      retryEnv,
+    );
+    assert.match(windows, /set "CODEX_ROUTER_NATIVE_RETRIES=3"/);
+    assert.match(windows, /set "CODEX_ROUTER_NATIVE_RETRY_BACKOFF_MS=400"/);
+    assert.match(windows, /set "CODEX_ROUTER_NATIVE_RETRY_BUDGET_MS=17000"/);
+  } finally {
+    rmSync(testRoot, { recursive: true, force: true });
+  }
+});
+
 test("packaged services preserve wrapper and PATH values with service-safe quoting", () => {
   const testRoot = mkdtempSync(path.join(os.tmpdir(), "codex-router-packaged-service-"));
   const stableRoot = path.join(testRoot, "opt % router", "libexec");

@@ -20,6 +20,11 @@ import {
   STATE_DIR,
   TARGET,
 } from "./paths.mjs";
+import {
+  NATIVE_RETRY_BACKOFF_MS,
+  NATIVE_RETRY_BUDGET_MS,
+  NATIVE_RETRY_LIMIT,
+} from "./upstream-retry.mjs";
 
 const command = process.argv[2] || "status";
 const effectivePlatform = process.env.CODEX_ROUTER_SERVICE_PLATFORM || process.platform;
@@ -64,6 +69,9 @@ function environmentEntries() {
     CODEX_ROUTER_OAUTH_PORT: String(PORTS.oauth),
     CODEX_ROUTER_PORT: String(PORTS.router),
     CODEX_ROUTER_API_PORT: String(PORTS.api),
+    CODEX_ROUTER_NATIVE_RETRIES: String(NATIVE_RETRY_LIMIT),
+    CODEX_ROUTER_NATIVE_RETRY_BACKOFF_MS: String(NATIVE_RETRY_BACKOFF_MS),
+    CODEX_ROUTER_NATIVE_RETRY_BUDGET_MS: String(NATIVE_RETRY_BUDGET_MS),
     ...(process.env.CODEX_ROUTER_SOURCE_ROOT
       ? { CODEX_ROUTER_SOURCE_ROOT: SOURCE_ROOT }
       : {}),
