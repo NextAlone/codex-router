@@ -319,6 +319,31 @@ function sanitizeChatToolHistory(messages, provider) {
     : repaired;
 }
 
+function normalizeMimoResponsesTools(payload) {
+  delete payload.web_search_options;
+  // Codex desktop's native catalog starts at `low`; it filters both `none`
+  // and `minimal` from the picker. Curated MiMo entries therefore use the
+  // visible `low` rung for "thinking off" and translate it back to MiMo's
+  // documented `none` value at the provider boundary.
+  if (payload.reasoning_effort === "low") payload.reasoning_effort = "none";
+  if (!Array.isArray(payload.tools)) return;
+  // MiMo's Responses surface documents function and namespace tools. Codex's
+  // shared routed provider can still inject its standalone web search tool,
+  // and a stale task can retain the native custom apply_patch declaration.
+  // Neither shape is accepted by this gateway phase, so remove only those
+  // unsupported definitions while preserving ordinary function tooling.
+  payload.tools = payload.tools.filter((tool) =>
+    ["function", "namespace"].includes(tool?.type)
+  );
+  if (payload.tools.length === 0) {
+    delete payload.tools;
+    delete payload.tool_choice;
+  } else if (payload.tool_choice !== undefined && payload.tool_choice !== "auto") {
+    // MiMo currently documents auto as the only accepted Responses choice.
+    payload.tool_choice = "auto";
+  }
+}
+
 function normalizeBody(buffer, contentType, route) {
   if (!buffer.length || !String(contentType || "").includes("application/json")) {
     const error = new Error("API-provider requests require a JSON body.");
@@ -378,6 +403,7 @@ function normalizeBody(buffer, contentType, route) {
   // Fireworks rejects this OpenAI search parameter instead of ignoring it.
   // Other provider payloads keep it unchanged.
   if (provider.id === "fireworks") delete payload.web_search_options;
+  if (provider.id === "mimo") normalizeMimoResponsesTools(payload);
   if (Array.isArray(payload.messages)) {
     payload.messages = sanitizeChatToolHistory(payload.messages, provider);
   }

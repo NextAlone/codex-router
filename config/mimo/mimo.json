@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "mimo",
+      "displayName": "Xiaomi MiMo API",
+      "kind": "openai-compatible",
+      "ownedBy": "xiaomi",
+      "protocol": "openai-responses",
+      "baseUrl": "https://api.xiaomimimo.com/v1",
+      "baseUrlEnv": "MIMO_BASE_URL",
+      "credential": {
+        "environment": [
+          "MIMO_API_KEY"
+        ],
+        "file": "mimo-api-key.secret",
+        "legacyFiles": [],
+        "keychainServices": [
+          "codex-router-mimo-api"
+        ],
+        "prompt": "Xiaomi MiMo API key"
+      }
+    }
+  ]
+}

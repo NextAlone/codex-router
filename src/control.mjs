@@ -1626,6 +1626,8 @@ async function handlePicker(action, value, flag) {
   const {
     modelPickerSnapshot,
     setAllModelsVisible,
+    setModelLabel,
+    setModelPriority,
     setModelVisible,
     setModelsVisible,
   } = await import("./model-picker-state.mjs");
@@ -1683,10 +1685,35 @@ async function handlePicker(action, value, flag) {
       throw new Error(`No enabled models found for provider: ${value}`);
     }
     setModelsVisible(slugs, flag === "show");
+  } else if (action === "priority") {
+    if (!(await knownModelSlug(value))) {
+      throw new Error(`Unknown model slug: ${value}`);
+    }
+    if (flag === "reset") {
+      setModelPriority(value, undefined);
+    } else {
+      const priority = Number(flag);
+      if (!Number.isInteger(priority) || priority < 0) {
+        throw new Error("Usage: control picker priority <model-slug> <non-negative-integer|reset>");
+      }
+      setModelPriority(value, priority);
+    }
+  } else if (action === "label") {
+    if (!(await knownModelSlug(value))) {
+      throw new Error(`Unknown model slug: ${value}`);
+    }
+    if (flag === "reset") setModelLabel(value, undefined);
+    else {
+      if (!String(flag || "").trim()) {
+        throw new Error("Usage: control picker label <model-slug> <display-label|reset>");
+      }
+      setModelLabel(value, flag);
+    }
   } else {
     throw new Error(
       "Usage: control picker status|all <show|hide>|set <model-slug> <show|hide>|" +
-        "provider <provider-id> <show|hide>",
+        "provider <provider-id> <show|hide>|priority <model-slug> <non-negative-integer|reset>|" +
+        "label <model-slug> <display-label|reset>",
     );
   }
   refreshModelSettingsCatalog();

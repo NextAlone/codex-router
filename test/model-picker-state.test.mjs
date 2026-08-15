@@ -11,7 +11,11 @@ const {
   MODEL_PICKER_STATE_PATH,
   modelPickerSnapshot,
   readHiddenModels,
+  readModelLabels,
+  readModelPriorities,
   setAllModelsVisible,
+  setModelLabel,
+  setModelPriority,
   setModelVisible,
   setModelsVisible,
 } = await import("../src/model-picker-state.mjs");
@@ -19,6 +23,44 @@ const {
 test("picker visibility defaults to no hidden models", () => {
   assert.deepEqual([...readHiddenModels()], []);
   assert.deepEqual(modelPickerSnapshot().hidden, []);
+  assert.deepEqual([...readModelPriorities()], []);
+  assert.deepEqual([...readModelLabels()], []);
+});
+
+test("picker labels round-trip and reset without changing other overrides", () => {
+  setModelVisible("grok-oauth/grok-4.6", false);
+  setModelPriority("grok-oauth/grok-4.6", 4);
+  setModelLabel("grok-oauth/grok-4.6", "Grok 4.6");
+  assert.deepEqual([...readModelLabels()], [["grok-oauth/grok-4.6", "Grok 4.6"]]);
+  assert.deepEqual(modelPickerSnapshot().labels, { "grok-oauth/grok-4.6": "Grok 4.6" });
+  assert.deepEqual(modelPickerSnapshot().hidden, ["grok-oauth/grok-4.6"]);
+  assert.equal(modelPickerSnapshot().priorities["grok-oauth/grok-4.6"], 4);
+
+  setModelLabel("grok-oauth/grok-4.6", undefined);
+  assert.deepEqual([...readModelLabels()], []);
+  setModelPriority("grok-oauth/grok-4.6", undefined);
+  setModelVisible("grok-oauth/grok-4.6", true);
+});
+
+test("picker labels reject empty values", () => {
+  assert.throws(() => setModelLabel("grok-oauth/grok-4.6", "  "), /non-empty string/);
+});
+
+test("picker priorities round-trip and reset without changing visibility", () => {
+  setModelVisible("grok-oauth/grok-4.6", false);
+  setModelPriority("grok-oauth/grok-4.6", 4);
+  assert.deepEqual([...readModelPriorities()], [["grok-oauth/grok-4.6", 4]]);
+  assert.deepEqual(modelPickerSnapshot().priorities, { "grok-oauth/grok-4.6": 4 });
+  assert.deepEqual(modelPickerSnapshot().hidden, ["grok-oauth/grok-4.6"]);
+
+  setModelPriority("grok-oauth/grok-4.6", undefined);
+  assert.deepEqual([...readModelPriorities()], []);
+  setModelVisible("grok-oauth/grok-4.6", true);
+});
+
+test("picker priorities reject invalid values", () => {
+  assert.throws(() => setModelPriority("grok-oauth/grok-4.6", -1), /non-negative integer/);
+  assert.throws(() => setModelPriority("grok-oauth/grok-4.6", 1.5), /non-negative integer/);
 });
 
 test("picker visibility round-trips through protected state", () => {

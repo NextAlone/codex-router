@@ -229,6 +229,16 @@ test("routed models inherit apply_patch unless the registry opts out", () => {
   assert.equal(noPatch.apply_patch_tool_type, null);
 });
 
+test("routed models can explicitly disable parallel tool calls", () => {
+  const parallelTemplate = { ...template, supports_parallel_tool_calls: true };
+  assert.equal(routedModel(parallelTemplate, grok).supports_parallel_tool_calls, true);
+  assert.equal(
+    routedModel(parallelTemplate, { ...grok, supportsParallelToolCalls: false })
+      .supports_parallel_tool_calls,
+    false,
+  );
+});
+
 test("routed models announce availability only when curated with NUX copy", () => {
   // Default stays null: an empty announcement card must never render.
   const plain = routedModel(template, grok);
@@ -317,6 +327,30 @@ test("merged catalog preserves native GPT identity while rewriting routed models
   assert.equal(bySlug.get("gpt-5.5").supports_reasoning_summaries, false);
   assert.match(bySlug.get("grok-oauth/grok-4.5").base_instructions, /based on Grok 4\.5/);
   assert.doesNotMatch(bySlug.get("grok-oauth/grok-4.5").base_instructions, /GPT-5/);
+});
+
+test("merged catalog applies persistent picker priority overrides", () => {
+  const native = { ...template, slug: "gpt-5.6-luna", priority: 3 };
+  const merged = buildMergedCatalog({ models: [native] }, [grok], {
+    priorityOverrides: new Map([["grok-oauth/grok-4.5", 4]]),
+  });
+  assert.deepEqual(merged.map((model) => [model.slug, model.priority]), [
+    ["gpt-5.6-luna", 3],
+    ["grok-oauth/grok-4.5", 4],
+  ]);
+});
+
+test("merged catalog applies persistent picker label overrides", () => {
+  const merged = buildMergedCatalog({ models: [template] }, [grok], {
+    labelOverrides: new Map([
+      ["gpt-5.5", "5.5"],
+      ["grok-oauth/grok-4.5", "Grok 4.5"],
+    ]),
+  });
+  assert.deepEqual(merged.map((model) => [model.slug, model.display_name]), [
+    ["grok-oauth/grok-4.5", "Grok 4.5"],
+    ["gpt-5.5", "5.5"],
+  ]);
 });
 
 test("merged catalog preserves an explicit native reasoning summary capability", () => {

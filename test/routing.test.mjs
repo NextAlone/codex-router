@@ -2012,6 +2012,69 @@ test("API forwarder replaces caller auth and enforces Kimi K3 API parameters", a
   }
 });
 
+test("API forwarder keeps MiMo function tools and removes unsupported Codex tools", async () => {
+  const upstreamRequests = [];
+  const upstream = await mockServer(async (request, response) => {
+    upstreamRequests.push({
+      url: request.url,
+      headers: request.headers,
+      body: await bodyJson(request),
+    });
+    json(response, 200, { id: "resp_mimo", object: "response", output: [] });
+  });
+  const forwarderPort = await openPort();
+  const forwarder = run("api-forwarder.mjs", {
+    CODEX_ROUTER_API_PORT: String(forwarderPort),
+    MIMO_BASE_URL: `http://127.0.0.1:${upstream.port}/v1`,
+    MIMO_API_KEY: "TEST_MIMO_API_KEY",
+    CODEX_ROUTER_QUIET: "1",
+  });
+
+  try {
+    await waitFor(`http://127.0.0.1:${forwarderPort}/health`, forwarder, {
+      Authorization: `Bearer ${INTERNAL_KEY}`,
+    });
+    const response = await fetch(
+      `http://127.0.0.1:${forwarderPort}/v1/responses`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${INTERNAL_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "mimo-v2-5-pro-ultraspeed",
+          input: "test",
+          reasoning_effort: "low",
+          tools: [
+            { type: "function", name: "read_file", parameters: { type: "object" } },
+            { type: "namespace", name: "codex_app", tools: [] },
+            { type: "web_search" },
+            { type: "custom", name: "apply_patch" },
+          ],
+          tool_choice: "required",
+          web_search_options: { search_context_size: "medium" },
+        }),
+      },
+    );
+    assert.equal(response.status, 200, forwarder.testErrors());
+    const request = upstreamRequests[0];
+    assert.equal(request.url, "/v1/responses");
+    assert.equal(request.headers.authorization, "Bearer TEST_MIMO_API_KEY");
+    assert.equal(request.body.model, "mimo-v2.5-pro-ultraspeed");
+    assert.equal(request.body.reasoning_effort, "none");
+    assert.deepEqual(request.body.tools.map((tool) => tool.type), [
+      "function",
+      "namespace",
+    ]);
+    assert.equal(request.body.tool_choice, "auto");
+    assert.equal(request.body.web_search_options, undefined);
+  } finally {
+    await stopChild(forwarder);
+    await closeServer(upstream.server);
+  }
+});
+
 test("API forwarder routes ClinePass with isolated auth and unchanged stream tools", async () => {
   const upstreamRequests = [];
   const upstream = await mockServer(async (request, response) => {

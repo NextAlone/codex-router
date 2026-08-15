@@ -30,7 +30,11 @@ import {
   subagentEligibleModels,
 } from "./multi-agent-state.mjs";
 import { applySubagentProofs, subagentProofSnapshot } from "./subagent-proofs.mjs";
-import { readHiddenModels } from "./model-picker-state.mjs";
+import {
+  readHiddenModels,
+  readModelLabels,
+  readModelPriorities,
+} from "./model-picker-state.mjs";
 import { buildNativeAliasAssignments } from "./native-alias.mjs";
 import { selectedConfiguredListedModels, configuredProviderIds } from "./provider-selection.mjs";
 import { assertStateOwnership } from "./state-owner.mjs";
@@ -558,6 +562,10 @@ export function routedModel(template, model) {
     // absent declaration remains the conservative default.
     supports_search_tool: ["hosted", "standalone"].includes(model.searchTool?.mode),
     supports_image_detail_original: model.supportsImageDetailOriginal === true,
+    supports_parallel_tool_calls:
+      model.supportsParallelToolCalls === false
+        ? false
+        : template.supports_parallel_tool_calls,
     use_responses_lite: false,
     // Codex only knows one ApplyPatchToolType variant. The native template
     // carries "freeform", but upstreams that reject OpenAI custom tools (Meta
@@ -665,8 +673,19 @@ function writeAnnouncedAt(announcedAt) {
   });
 }
 
-function sortCatalogModels(models) {
-  return [...models].sort((left, right) => {
+function sortCatalogModels(
+  models,
+  priorityOverrides = new Map(),
+  labelOverrides = new Map(),
+) {
+  return [...models].map((model) => {
+    const slug = String(model.slug);
+    return {
+      ...model,
+      ...(priorityOverrides.has(slug) ? { priority: priorityOverrides.get(slug) } : {}),
+      ...(labelOverrides.has(slug) ? { display_name: labelOverrides.get(slug) } : {}),
+    };
+  }).sort((left, right) => {
     const priority = Number(left.priority ?? 999) - Number(right.priority ?? 999);
     return priority || String(left.slug).localeCompare(String(right.slug));
   });
@@ -701,7 +720,15 @@ export function promoteNativeMultiAgent(models, settings, hidden = new Set()) {
   });
 }
 
-export function buildMergedCatalog(native, routedModelsList, { includeNative = true } = {}) {
+export function buildMergedCatalog(
+  native,
+  routedModelsList,
+  {
+    includeNative = true,
+    priorityOverrides = new Map(),
+    labelOverrides = new Map(),
+  } = {},
+) {
   const template =
     native.models.find((model) => model.slug === "gpt-5.5") ||
     native.models.find((model) => model.visibility === "list") ||
@@ -717,7 +744,7 @@ export function buildMergedCatalog(native, routedModelsList, { includeNative = t
   for (const model of routedModelsList) {
     models.set(model.slug, routedModel(template, model));
   }
-  return sortCatalogModels(models.values());
+  return sortCatalogModels(models.values(), priorityOverrides, labelOverrides);
 }
 
 // Login-free Codex surfaces only list allowlisted native slugs, so external
@@ -731,7 +758,12 @@ export function buildMergedCatalog(native, routedModelsList, { includeNative = t
 // merged-catalog path filters through `selectedConfiguredListedModels()`; this
 // function keeps the same rule for the login-free path instead of trusting its
 // caller to pre-filter, so no future call site can publish dead slots again.
-export function buildLoginFreeCatalog(native, routedModelsList) {
+export function buildLoginFreeCatalog(
+  native,
+  routedModelsList,
+  priorityOverrides = new Map(),
+  labelOverrides = new Map(),
+) {
   const configured = new Set(configuredProviderIds());
   const usableModels = routedModelsList.filter(
     (model) => !model.provider || configured.has(model.provider),
@@ -747,12 +779,16 @@ export function buildLoginFreeCatalog(native, routedModelsList) {
       slug: nativeModel.slug,
       priority: nativeModel.priority,
     })),
-    ...buildMergedCatalog(native, usableModels, { includeNative: false }).map(
+    ...buildMergedCatalog(native, usableModels, {
+      includeNative: false,
+      priorityOverrides,
+      labelOverrides,
+    }).map(
       (model) =>
         aliasedSlugs.has(model.slug) ? { ...model, visibility: "hide" } : model,
     ),
   ];
-  return { models: sortCatalogModels(models), aliases };
+  return { models: sortCatalogModels(models, priorityOverrides, labelOverrides), aliases };
 }
 
 function main() {
@@ -762,6 +798,8 @@ function main() {
   assertStateOwnership("write the Codex model catalog");
   const userSlugs = new Set(readUserModels().map((model) => String(model.slug)));
   const hiddenModels = readHiddenModels();
+  const priorityOverrides = readModelPriorities();
+  const labelOverrides = readModelLabels();
   const selectedModels = selectedConfiguredListedModels();
   const multiAgentSettings = readMultiAgentSettings();
   // Demotions first, then this machine's own recorded proofs. Settings still
@@ -827,10 +865,12 @@ function main() {
   );
   const catalogModels = applyVisionBridge(routedModels, visionEngine);
   const { models: merged, aliases } = loginFree
-    ? buildLoginFreeCatalog(native, catalogModels)
+    ? buildLoginFreeCatalog(native, catalogModels, priorityOverrides, labelOverrides)
     : {
         models: buildMergedCatalog(native, routedCatalog ? catalogModels : [], {
           includeNative: openaiAuthenticated,
+          priorityOverrides,
+          labelOverrides,
         }),
         aliases: {},
       };

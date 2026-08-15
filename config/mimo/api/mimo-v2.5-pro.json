@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "slug": "mimo/mimo-v2.5-pro",
+      "gatewayModel": "mimo-v2-5-pro",
+      "upstreamModel": "mimo-v2.5-pro",
+      "provider": "mimo",
+      "listed": true,
+      "displayName": "MiMo-V2.5-Pro (API)",
+      "description": "Xiaomi's flagship agent model through the official MiMo Responses API, with a 1M context window, reasoning, and tool calls.",
+      "priority": 9,
+      "defaultEffort": "high",
+      "reasoningLevels": [
+        {
+          "effort": "low",
+          "description": "Disable thinking"
+        },
+        {
+          "effort": "high",
+          "description": "Enable thinking"
+        }
+      ],
+      "supportsReasoningSummaries": true,
+      "defaultReasoningSummary": "none",
+      "contextWindow": 1048576,
+      "autoCompact": 996147,
+      "inputModalities": [
+        "text"
+      ],
+      "supportsApplyPatchTool": false,
+      "supportsParallelToolCalls": false,
+      "compHash": "mimo-v2-5-pro-v2"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "slug": "mimo/mimo-v2.5-pro-ultraspeed",
+      "gatewayModel": "mimo-v2-5-pro-ultraspeed",
+      "upstreamModel": "mimo-v2.5-pro-ultraspeed",
+      "provider": "mimo",
+      "listed": true,
+      "displayName": "MiMo-V2.5-Pro-UltraSpeed (API)",
+      "description": "Xiaomi's limited-access UltraSpeed mode of MiMo-V2.5-Pro through the official API, with reasoning, tool calls, and output speeds up to 1000 tokens/s.",
+      "priority": 8,
+      "defaultEffort": "high",
+      "reasoningLevels": [
+        {
+          "effort": "low",
+          "description": "Disable thinking"
+        },
+        {
+          "effort": "high",
+          "description": "Enable thinking"
+        }
+      ],
+      "supportsReasoningSummaries": true,
+      "defaultReasoningSummary": "none",
+      "contextWindow": 1048576,
+      "autoCompact": 996147,
+      "inputModalities": [
+        "text"
+      ],
+      "supportsApplyPatchTool": false,
+      "supportsParallelToolCalls": false,
+      "compHash": "mimo-v2-5-pro-ultraspeed-v2"
+    }
+  ]
+}

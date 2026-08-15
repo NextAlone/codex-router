@@ -404,6 +404,12 @@ function modelProblem(model, providers, slugs, gatewayModels) {
   ) {
     return `model ${model.slug} has an invalid supportsImageDetailOriginal`;
   }
+  if (
+    model.supportsParallelToolCalls !== undefined &&
+    typeof model.supportsParallelToolCalls !== "boolean"
+  ) {
+    return `model ${model.slug} has an invalid supportsParallelToolCalls`;
+  }
   // The router's vision bridge covers every text-only model once the operator
   // enables it, so this field exists only to opt one out -- a model whose
   // upstream mangles long injected transcripts, for example. Setting it true
@@ -452,7 +458,7 @@ function modelProblem(model, providers, slugs, gatewayModels) {
   }
   if (
     model.defaultReasoningSummary !== undefined &&
-    !["auto", "concise", "detailed"].includes(model.defaultReasoningSummary)
+    !["none", "auto", "concise", "detailed"].includes(model.defaultReasoningSummary)
   ) {
     return `model ${model.slug} has an invalid defaultReasoningSummary`;
   }

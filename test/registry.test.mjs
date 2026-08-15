@@ -92,6 +92,9 @@ test("provider registry exposes configured API and OAuth model families", () => 
       "meta/muse-spark-1.1",
       "meta/muse-spark-1.2-contributor",
       "meta/muse-spark-1.2",
+      "mimo/mimo-v2.5-pro-ultraspeed",
+      "mimo/mimo-v2.5-pro",
+      "mimo/mimo-v2.5",
       "minimax-token-plan/minimax-m3",
       "ollama-cloud/deepseek-v4-flash",
       "ollama-cloud/deepseek-v4-pro",
@@ -394,6 +397,7 @@ test("provider registry exposes configured API and OAuth model families", () => 
     "kimi-oauth/k3",
     "kimi-oauth/kimi-for-coding",
     "kimi-oauth/kimi-for-coding-highspeed",
+    "mimo/mimo-v2.5",
     "minimax-token-plan/minimax-m3",
     "qwen-plan/qwen3.6-flash",
     "qwen-plan/qwen3.7-max",
@@ -467,6 +471,19 @@ test("DeepSeek V4 Flash routes opt in to Codex standalone web search", () => {
   }
 });
 
+test("official DeepSeek V4 models expose only the upstream high/max effort ladder", () => {
+  for (const slug of [
+    "deepseek/deepseek-v4-flash",
+    "deepseek/deepseek-v4-pro",
+  ]) {
+    assert.deepEqual(
+      MODEL_BY_SLUG.get(slug)?.reasoningLevels.map((level) => level.effort),
+      ["high", "max"],
+      slug,
+    );
+  }
+});
+
 test("Meta models opt out of the apply_patch custom tool", () => {
   for (const slug of [
     "meta/muse-spark-1.2",
@@ -476,6 +493,16 @@ test("Meta models opt out of the apply_patch custom tool", () => {
     assert.equal(MODEL_BY_SLUG.get(slug).supportsApplyPatchTool, false);
   }
   assert.equal(MODEL_BY_SLUG.get("grok-oauth/grok-4.5").supportsApplyPatchTool, undefined);
+});
+
+test("MiMo API models opt out of the unsupported custom apply_patch tool", () => {
+  for (const slug of [
+    "mimo/mimo-v2.5-pro-ultraspeed",
+    "mimo/mimo-v2.5-pro",
+    "mimo/mimo-v2.5",
+  ]) {
+    assert.equal(MODEL_BY_SLUG.get(slug).supportsApplyPatchTool, false, slug);
+  }
 });
 
 test("deprecated DeepSeek aliases remain routable but stay out of the picker", () => {
@@ -531,6 +558,16 @@ test("Ollama Cloud models advertise only levels the forwarder maps to Ollama", (
         `${model.slug} advertises ${level.effort}, which Ollama would reject`,
       );
     }
+  }
+});
+
+test("MiMo advertises Codex desktop's visible low rung for upstream no-thinking", () => {
+  for (const model of MODELS) {
+    if (model.provider !== "mimo") continue;
+    assert.deepEqual(
+      model.reasoningLevels.map((level) => level.effort),
+      ["low", "high"],
+    );
   }
 });
 
