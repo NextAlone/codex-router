@@ -135,6 +135,7 @@ Linux installations support the Codex CLI.
 | MiniMax M3 | `minimax-token-plan/minimax-m3` | MiniMax Token Plan API key |
 | MiMo-V2.5 (Xiaomi API) | `xiaomi-mimo/mimo-v2.5` | Xiaomi MiMo API key |
 | MiMo-V2.5-Pro (Xiaomi API) | `xiaomi-mimo/mimo-v2.5-pro` | Xiaomi MiMo API key |
+| MiMo-V2.5-Pro-UltraSpeed (Xiaomi API) | `xiaomi-mimo/mimo-v2.5-pro-ultraspeed` | Xiaomi MiMo API key with UltraSpeed access |
 | Qwen3.8 Max (Plan) | `qwen-plan/qwen3.8-max` | Alibaba Model Studio plan API key |
 | Qwen3.8 Max Preview (Plan) | `qwen-plan/qwen3.8-max-preview` | Alibaba Model Studio plan API key |
 | Qwen3.7 Max (Plan) | `qwen-plan/qwen3.7-max` | Alibaba Model Studio plan API key |
@@ -217,7 +218,8 @@ MiMo (Xiaomi API) uses Xiaomi's official OpenAI-compatible endpoint at
 serves `mimo-v2.5` and `mimo-v2.5-pro` through the standard
 `/chat/completions` surface, so requests never touch the Responses gateway.
 `mimo-v2.5` is verified for text/image input and Codex standalone web search;
-`mimo-v2.5-pro` is text-only. Store the key with
+`mimo-v2.5-pro` and the limited-access `mimo-v2.5-pro-ultraspeed` route are
+text-only. Store the key with
 `./bin/model-router codex provider-key xiaomi-mimo set`.
 
 Native GPT models continue to use Codex directly. There is no separate GPT or
@@ -1688,4 +1690,3 @@ References: [Kimi Code CLI OAuth](https://www.kimi.com/help/kimi-code/cli-gettin
 and [opencodex](https://github.com/lidge-jun/opencodex).
 
 MIT licensed. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
-

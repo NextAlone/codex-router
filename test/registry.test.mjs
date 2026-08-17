@@ -140,6 +140,7 @@ test("provider registry exposes configured API and OAuth model families", () => 
       "qwen-plan/qwen3.7-plus",
       "qwen-plan/qwen3.8-max-preview",
       "qwen-plan/qwen3.8-max",
+      "xiaomi-mimo/mimo-v2.5-pro-ultraspeed",
       "xiaomi-mimo/mimo-v2.5-pro",
       "xiaomi-mimo/mimo-v2.5",
       "zai-api/glm-4.7",
@@ -579,7 +580,8 @@ test("Meta models opt out of the apply_patch custom tool", () => {
 test("official Xiaomi MiMo routes advertise only verified capabilities", () => {
   const vlm = MODEL_BY_SLUG.get("xiaomi-mimo/mimo-v2.5");
   const pro = MODEL_BY_SLUG.get("xiaomi-mimo/mimo-v2.5-pro");
-  for (const model of [pro, vlm]) {
+  const ultraspeed = MODEL_BY_SLUG.get("xiaomi-mimo/mimo-v2.5-pro-ultraspeed");
+  for (const model of [ultraspeed, pro, vlm]) {
     assert.equal(model.contextWindow, 1_048_576);
     // 900,000 is what every other million-token route in this registry
     // compacts at, including the three other MiMo routes. The 95% this
@@ -596,6 +598,8 @@ test("official Xiaomi MiMo routes advertise only verified capabilities", () => {
     assert.deepEqual(model.experimentalSupportedTools, []);
     assert.equal(model.supportsApplyPatchTool, false);
   }
+  assert.deepEqual(ultraspeed.inputModalities, ["text"]);
+  assert.equal(ultraspeed.searchTool, undefined);
   assert.deepEqual(pro.inputModalities, ["text"]);
   assert.equal(pro.searchTool, undefined);
   assert.deepEqual(vlm.inputModalities, ["text", "image"]);

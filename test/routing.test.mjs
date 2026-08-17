@@ -3956,6 +3956,23 @@ test("API forwarder keeps Xiaomi MiMo web search options on chat completions", a
       search_context_size: "medium",
     });
     assert.equal(upstreamRequests[0].client_metadata, undefined);
+
+    const ultraspeedResponse = await fetch(
+      `http://127.0.0.1:${forwarderPort}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${INTERNAL_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "xiaomi-mimo-mimo-v2-5-pro-ultraspeed",
+          messages: [{ role: "user", content: "test" }],
+        }),
+      },
+    );
+    assert.equal(ultraspeedResponse.status, 200, forwarder.testErrors());
+    assert.equal(upstreamRequests[1].model, "mimo-v2.5-pro-ultraspeed");
   } finally {
     await stopChild(forwarder);
     await closeServer(upstream.server);
