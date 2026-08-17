@@ -95,6 +95,17 @@ test("provider registry exposes configured API and OAuth model families", () => 
       "meta/muse-spark-1.1",
       "meta/muse-spark-1.2-contributor",
       "meta/muse-spark-1.2",
+      "mify/deepseek-v4-flash",
+      "mify/kimi-k3",
+      "mify/gpt-5.6-luna",
+      "mify/gpt-5.6-sol",
+      "mify/gpt-5.6-terra",
+      "mify/mimo-v2.5-pro",
+      "mify/glm-5.2",
+      "mify/claude-haiku-4.5",
+      "mify/claude-sonnet-5",
+      "mify/claude-opus-4.8",
+      "mify/deepseek-v4-pro",
       "minimax-token-plan/minimax-m3",
       "ollama-cloud/deepseek-v4-flash",
       "ollama-cloud/deepseek-v4-pro",
@@ -177,6 +188,32 @@ test("provider registry exposes configured API and OAuth model families", () => 
   assert.ok(PROVIDERS.get("zai-api").planNote);
   assert.equal(PROVIDERS.get("ollama-cloud").baseUrl, "https://ollama.com/v1");
   assert.equal(PROVIDERS.get("minimax-token-plan").baseUrl, "https://api.minimax.io/v1");
+  const mify = PROVIDERS.get("mify");
+  assert.equal(mify.displayName, "Mify Direct");
+  assert.equal(mify.baseUrl, "http://model.mify.ai.srv/v1");
+  assert.equal(mify.baseUrlEnv, "MIFY_BASE_URL");
+  assert.deepEqual(mify.credential.environment, ["MIFY_API_KEY"]);
+  assert.equal(mify.credential.file, "mify-api-key.secret");
+  assert.deepEqual(mify.credential.keychainServices, ["codex-router-mify-api"]);
+  const mifyModels = LISTED_MODELS.filter(({ provider }) => provider === "mify");
+  assert.deepEqual(
+    mifyModels.map(({ upstreamModel }) => upstreamModel),
+    [
+      "deepseek/deepseek-v4-flash",
+      "moonshot/kimi-k3",
+      "ppio/pa/gpt-5.6-luna",
+      "ppio/pa/gpt-5.6-sol",
+      "ppio/pa/gpt-5.6-terra",
+      "xiaomi/mimo-v2.5-pro",
+      "zhipuai/glm-5.2",
+      "ppio/pa/claude-haiku-4-5",
+      "ppio/pa/claude-sonnet-5",
+      "ppio/pa/claude-opus-4-8",
+      "deepseek/deepseek-v4-pro",
+    ],
+  );
+  assert.deepEqual(mifyModels.map(({ priority }) => priority), [210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220]);
+  assert.equal(mifyModels.every(({ multiAgentVersion }) => multiAgentVersion === undefined), true);
   // Go is its own endpoint, not the pay-per-use Zen one.
   assert.equal(PROVIDERS.get("opencode-go").baseUrl, "https://opencode.ai/zen/go/v1");
   assert.equal(PROVIDERS.get("opencode-go-messages").baseUrl, "https://opencode.ai/zen/go/v1");

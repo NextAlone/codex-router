@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "slug": "mify/deepseek-v4-flash",
+      "gatewayModel": "mify-deepseek-v4-flash",
+      "upstreamModel": "deepseek/deepseek-v4-flash",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "DeepSeek V4 Flash",
+      "description": "DeepSeek V4 Flash through Mify Direct.",
+      "priority": 210,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" }
+      ],
+      "contextWindow": 1000000,
+      "autoCompact": 900000,
+      "inputModalities": ["text"],
+      "compHash": "mify-deepseek-v4-flash-v1"
+    },
+    {
+      "slug": "mify/kimi-k3",
+      "gatewayModel": "mify-kimi-k3",
+      "upstreamModel": "moonshot/kimi-k3",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "Kimi K3",
+      "description": "Kimi K3 through Mify Direct.",
+      "priority": 211,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" }
+      ],
+      "contextWindow": 1050000,
+      "autoCompact": 900000,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-kimi-k3-v1"
+    },
+    {
+      "slug": "mify/gpt-5.6-luna",
+      "gatewayModel": "mify-gpt-5-6-luna",
+      "upstreamModel": "ppio/pa/gpt-5.6-luna",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "GPT-5.6 Luna",
+      "description": "GPT-5.6 Luna through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 212,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" },
+        { "effort": "max", "description": "Maximum reasoning depth" }
+      ],
+      "contextWindow": 368000,
+      "autoCompact": 349600,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-gpt-5-6-luna-v1"
+    },
+    {
+      "slug": "mify/gpt-5.6-sol",
+      "gatewayModel": "mify-gpt-5-6-sol",
+      "upstreamModel": "ppio/pa/gpt-5.6-sol",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "GPT-5.6 Sol",
+      "description": "GPT-5.6 Sol through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 213,
+      "defaultEffort": "low",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" },
+        { "effort": "max", "description": "Maximum reasoning depth" },
+        { "effort": "ultra", "description": "Maximum reasoning with automatic delegation" }
+      ],
+      "contextWindow": 368000,
+      "autoCompact": 349600,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-gpt-5-6-sol-v1"
+    },
+    {
+      "slug": "mify/gpt-5.6-terra",
+      "gatewayModel": "mify-gpt-5-6-terra",
+      "upstreamModel": "ppio/pa/gpt-5.6-terra",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "GPT-5.6 Terra",
+      "description": "GPT-5.6 Terra through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 214,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" },
+        { "effort": "max", "description": "Maximum reasoning depth" },
+        { "effort": "ultra", "description": "Maximum reasoning with automatic delegation" }
+      ],
+      "contextWindow": 368000,
+      "autoCompact": 349600,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-gpt-5-6-terra-v1"
+    },
+    {
+      "slug": "mify/mimo-v2.5-pro",
+      "gatewayModel": "mify-mimo-v2-5-pro",
+      "upstreamModel": "xiaomi/mimo-v2.5-pro",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "MiMo V2.5 Pro",
+      "description": "MiMo V2.5 Pro through Mify Direct.",
+      "priority": 215,
+      "defaultEffort": "high",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Lower reasoning effort" },
+        { "effort": "high", "description": "High reasoning effort" }
+      ],
+      "contextWindow": 1048576,
+      "autoCompact": 996147,
+      "inputModalities": ["text"],
+      "compHash": "mify-mimo-v2-5-pro-v1"
+    },
+    {
+      "slug": "mify/glm-5.2",
+      "gatewayModel": "mify-glm-5-2",
+      "upstreamModel": "zhipuai/glm-5.2",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "GLM-5.2",
+      "description": "GLM-5.2 through Mify Direct.",
+      "priority": 216,
+      "defaultEffort": "max",
+      "reasoningLevels": [
+        { "effort": "high", "description": "High thinking budget" },
+        { "effort": "max", "description": "Maximum thinking budget" }
+      ],
+      "contextWindow": 1000000,
+      "autoCompact": 900000,
+      "inputModalities": ["text"],
+      "compHash": "mify-glm-5-2-v1"
+    },
+    {
+      "slug": "mify/claude-haiku-4.5",
+      "gatewayModel": "mify-claude-haiku-4-5",
+      "upstreamModel": "ppio/pa/claude-haiku-4-5",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "Claude Haiku 4.5",
+      "description": "Claude Haiku 4.5 through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 217,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" }
+      ],
+      "contextWindow": 200000,
+      "autoCompact": 190000,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-claude-haiku-4-5-v1"
+    },
+    {
+      "slug": "mify/claude-sonnet-5",
+      "gatewayModel": "mify-claude-sonnet-5",
+      "upstreamModel": "ppio/pa/claude-sonnet-5",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "Sonnet 5",
+      "description": "Claude Sonnet 5 through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 218,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" },
+        { "effort": "max", "description": "Maximum reasoning depth" }
+      ],
+      "contextWindow": 1000000,
+      "autoCompact": 900000,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-claude-sonnet-5-v1"
+    },
+    {
+      "slug": "mify/claude-opus-4.8",
+      "gatewayModel": "mify-claude-opus-4-8",
+      "upstreamModel": "ppio/pa/claude-opus-4-8",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "Opus 4.8",
+      "description": "Claude Opus 4.8 through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 219,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" },
+        { "effort": "max", "description": "Maximum reasoning depth" }
+      ],
+      "contextWindow": 1000000,
+      "autoCompact": 900000,
+      "inputModalities": ["text", "image"],
+      "compHash": "mify-claude-opus-4-8-v1"
+    },
+    {
+      "slug": "mify/deepseek-v4-pro",
+      "gatewayModel": "mify-deepseek-v4-pro",
+      "upstreamModel": "deepseek/deepseek-v4-pro",
+      "provider": "mify",
+      "listed": true,
+      "displayName": "DeepSeek V4 Pro",
+      "description": "DeepSeek V4 Pro through Mify Direct; the quoted price covers inputs below 272K tokens.",
+      "priority": 220,
+      "defaultEffort": "medium",
+      "reasoningLevels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "medium", "description": "Balanced reasoning" },
+        { "effort": "high", "description": "Greater reasoning depth" },
+        { "effort": "xhigh", "description": "Extra-high reasoning depth" }
+      ],
+      "contextWindow": 1000000,
+      "autoCompact": 900000,
+      "inputModalities": ["text"],
+      "compHash": "mify-deepseek-v4-pro-v1"
+    }
+  ]
+}
