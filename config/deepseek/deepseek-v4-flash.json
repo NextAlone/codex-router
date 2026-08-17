@@ -13,10 +13,6 @@
       "defaultEffort": "high",
       "reasoningLevels": [
         {
-          "effort": "low",
-          "description": "Faster reasoning"
-        },
-        {
           "effort": "high",
           "description": "Deep reasoning"
         },
@@ -34,7 +30,7 @@
         "mode": "standalone"
       },
       "requestProfile": "deepseek-thinking",
-      "compHash": "deepseek-v4-flash-v2"
+      "compHash": "deepseek-v4-flash-v3"
     }
   ]
 }

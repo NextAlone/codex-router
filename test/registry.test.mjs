@@ -552,6 +552,19 @@ test("DeepSeek V4 Flash routes opt in to Codex standalone web search", () => {
   }
 });
 
+test("official DeepSeek V4 models expose only the upstream high/max effort ladder", () => {
+  for (const slug of [
+    "deepseek/deepseek-v4-flash",
+    "deepseek/deepseek-v4-pro",
+  ]) {
+    assert.deepEqual(
+      MODEL_BY_SLUG.get(slug)?.reasoningLevels.map((level) => level.effort),
+      ["high", "max"],
+      slug,
+    );
+  }
+});
+
 test("Meta models opt out of the apply_patch custom tool", () => {
   for (const slug of [
     "meta/muse-spark-1.2",
