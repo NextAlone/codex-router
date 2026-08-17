@@ -25,14 +25,38 @@ export const MODEL_PICKER_STATE_PATH =
 // that cannot tell the two apart re-applies itself over the operator's choice
 // on the next rebuild (see `seedModelsHidden`).
 function readPickerState() {
-  const empty = { hidden: new Set(), seeded: new Set() };
+  const empty = {
+    hidden: new Set(),
+    seeded: new Set(),
+    priorities: new Map(),
+    labels: new Map(),
+  };
   if (!existsSync(MODEL_PICKER_STATE_PATH)) return empty;
   try {
     const parsed = JSON.parse(readFileSync(MODEL_PICKER_STATE_PATH, "utf8"));
     if (parsed?.version !== 1 || !Array.isArray(parsed.hidden)) return empty;
     const slugs = (value) =>
       new Set((Array.isArray(value) ? value : []).map((slug) => String(slug)).filter(Boolean));
-    return { hidden: slugs(parsed.hidden), seeded: slugs(parsed.seeded) };
+    const entries = (value) =>
+      value && typeof value === "object" && !Array.isArray(value)
+        ? Object.entries(value)
+        : [];
+    const priorities = new Map(
+      entries(parsed.priorities).filter(
+        ([slug, priority]) => slug && Number.isInteger(priority) && priority >= 0,
+      ),
+    );
+    const labels = new Map(
+      entries(parsed.labels).filter(
+        ([slug, label]) => slug && typeof label === "string" && label.trim(),
+      ),
+    );
+    return {
+      hidden: slugs(parsed.hidden),
+      seeded: slugs(parsed.seeded),
+      priorities,
+      labels,
+    };
   } catch {
     return empty;
   }
@@ -42,7 +66,21 @@ export function readHiddenModels() {
   return readPickerState().hidden;
 }
 
-function writePickerState({ hidden, seeded }) {
+export function readModelPriorities() {
+  return readPickerState().priorities;
+}
+
+export function readModelLabels() {
+  return readPickerState().labels;
+}
+
+function sortedObject(values) {
+  return Object.fromEntries(
+    [...values.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+function writePickerState({ hidden, seeded, priorities, labels }) {
   const stateDir = path.dirname(MODEL_PICKER_STATE_PATH);
   mkdirSync(stateDir, { recursive: true, mode: 0o700 });
   chmodSync(stateDir, 0o700);
@@ -50,7 +88,13 @@ function writePickerState({ hidden, seeded }) {
   writeFileSync(
     temporary,
     `${JSON.stringify(
-      { version: 1, hidden: [...hidden].sort(), seeded: [...seeded].sort() },
+      {
+        version: 1,
+        hidden: [...hidden].sort(),
+        seeded: [...seeded].sort(),
+        priorities: sortedObject(priorities),
+        labels: sortedObject(labels),
+      },
       null,
       2,
     )}\n`,
@@ -63,8 +107,11 @@ function writePickerState({ hidden, seeded }) {
 }
 
 export function modelPickerSnapshot() {
+  const { hidden, priorities, labels } = readPickerState();
   return {
-    hidden: [...readHiddenModels()].sort(),
+    hidden: [...hidden].sort(),
+    priorities: sortedObject(priorities),
+    labels: sortedObject(labels),
     path: MODEL_PICKER_STATE_PATH,
   };
 }
@@ -78,24 +125,49 @@ export function setModelVisible(slug, visible) {
 export function setModelsVisible(slugs, visible) {
   const values = [...new Set(slugs.map((slug) => String(slug || "").trim()).filter(Boolean))];
   if (values.length === 0) throw new Error("At least one model slug is required.");
-  const { hidden, seeded } = readPickerState();
+  const state = readPickerState();
   for (const value of values) {
-    if (visible) hidden.delete(value);
-    else hidden.add(value);
+    if (visible) state.hidden.delete(value);
+    else state.hidden.add(value);
     // The operator just decided this one. Recording it is what stops a
     // shipped default from quietly undoing the decision later.
-    seeded.add(value);
+    state.seeded.add(value);
   }
-  return writePickerState({ hidden, seeded });
+  return writePickerState(state);
 }
 
 export function setAllModelsVisible(slugs, visible) {
   const known = [...new Set(slugs.map((slug) => String(slug).trim()).filter(Boolean))];
-  const { seeded } = readPickerState();
+  const state = readPickerState();
   return writePickerState({
+    ...state,
     hidden: visible ? new Set() : new Set(known),
-    seeded: new Set([...seeded, ...known]),
+    seeded: new Set([...state.seeded, ...known]),
   });
+}
+
+export function setModelPriority(slug, priority) {
+  const value = String(slug || "").trim();
+  if (!value) throw new Error("A model slug is required.");
+  if (priority !== undefined && (!Number.isInteger(priority) || priority < 0)) {
+    throw new Error("Model priority must be a non-negative integer.");
+  }
+  const state = readPickerState();
+  if (priority === undefined) state.priorities.delete(value);
+  else state.priorities.set(value, priority);
+  return writePickerState(state);
+}
+
+export function setModelLabel(slug, label) {
+  const value = String(slug || "").trim();
+  if (!value) throw new Error("A model slug is required.");
+  if (label !== undefined && (typeof label !== "string" || !label.trim())) {
+    throw new Error("Model label must be a non-empty string.");
+  }
+  const state = readPickerState();
+  if (label === undefined) state.labels.delete(value);
+  else state.labels.set(value, label.trim());
+  return writePickerState(state);
 }
 
 // Applies a shipped default to models the operator has never decided, and only
@@ -110,12 +182,12 @@ export function seedModelsHidden(slugs) {
   const values = [...new Set(
     (Array.isArray(slugs) ? slugs : []).map((slug) => String(slug || "").trim()).filter(Boolean),
   )];
-  const { hidden, seeded } = readPickerState();
-  const fresh = values.filter((value) => !seeded.has(value));
+  const state = readPickerState();
+  const fresh = values.filter((value) => !state.seeded.has(value));
   if (fresh.length === 0) return modelPickerSnapshot();
   for (const value of fresh) {
-    hidden.add(value);
-    seeded.add(value);
+    state.hidden.add(value);
+    state.seeded.add(value);
   }
-  return writePickerState({ hidden, seeded });
+  return writePickerState(state);
 }

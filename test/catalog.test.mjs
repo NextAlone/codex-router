@@ -333,6 +333,30 @@ test("merged catalog preserves native GPT identity while rewriting routed models
   assert.doesNotMatch(bySlug.get("grok-oauth/grok-4.5").base_instructions, /GPT-5/);
 });
 
+test("merged catalog applies persistent picker priority overrides", () => {
+  const native = { ...template, slug: "gpt-5.6-luna", priority: 3 };
+  const merged = buildMergedCatalog({ models: [native] }, [grok], {
+    priorityOverrides: new Map([["grok-oauth/grok-4.5", 4]]),
+  });
+  assert.deepEqual(merged.map((model) => [model.slug, model.priority]), [
+    ["gpt-5.6-luna", 3],
+    ["grok-oauth/grok-4.5", 4],
+  ]);
+});
+
+test("merged catalog applies persistent picker label overrides", () => {
+  const merged = buildMergedCatalog({ models: [template] }, [grok], {
+    labelOverrides: new Map([
+      ["gpt-5.5", "5.5"],
+      ["grok-oauth/grok-4.5", "Grok 4.5"],
+    ]),
+  });
+  assert.deepEqual(merged.map((model) => [model.slug, model.display_name]), [
+    ["grok-oauth/grok-4.5", "Grok 4.5"],
+    ["gpt-5.5", "5.5"],
+  ]);
+});
+
 test("merged catalog preserves an explicit native reasoning summary capability", () => {
   const native = {
     ...template,

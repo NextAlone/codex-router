@@ -29,7 +29,12 @@ import {
   readMultiAgentSettings,
   subagentEligibleModels,
 } from "./multi-agent-state.mjs";
-import { readHiddenModels, seedModelsHidden } from "./model-picker-state.mjs";
+import {
+  readHiddenModels,
+  readModelLabels,
+  readModelPriorities,
+  seedModelsHidden,
+} from "./model-picker-state.mjs";
 import { buildNativeAliasAssignments } from "./native-alias.mjs";
 import {
   NATIVE_CONTEXT_VARIANT_SLUGS,
@@ -677,8 +682,19 @@ function writeAnnouncedAt(announcedAt) {
   });
 }
 
-function sortCatalogModels(models) {
-  return [...models].sort((left, right) => {
+function sortCatalogModels(
+  models,
+  priorityOverrides = new Map(),
+  labelOverrides = new Map(),
+) {
+  return [...models].map((model) => {
+    const slug = String(model.slug);
+    return {
+      ...model,
+      ...(priorityOverrides.has(slug) ? { priority: priorityOverrides.get(slug) } : {}),
+      ...(labelOverrides.has(slug) ? { display_name: labelOverrides.get(slug) } : {}),
+    };
+  }).sort((left, right) => {
     const priority = Number(left.priority ?? 999) - Number(right.priority ?? 999);
     return priority || String(left.slug).localeCompare(String(right.slug));
   });
@@ -713,7 +729,15 @@ export function promoteNativeMultiAgent(models, settings, hidden = new Set()) {
   });
 }
 
-export function buildMergedCatalog(native, routedModelsList, { includeNative = true } = {}) {
+export function buildMergedCatalog(
+  native,
+  routedModelsList,
+  {
+    includeNative = true,
+    priorityOverrides = new Map(),
+    labelOverrides = new Map(),
+  } = {},
+) {
   const template =
     native.models.find((model) => model.slug === "gpt-5.5") ||
     native.models.find((model) => model.visibility === "list") ||
@@ -729,7 +753,7 @@ export function buildMergedCatalog(native, routedModelsList, { includeNative = t
   for (const model of routedModelsList) {
     models.set(model.slug, routedModel(template, model));
   }
-  return sortCatalogModels(models.values());
+  return sortCatalogModels(models.values(), priorityOverrides, labelOverrides);
 }
 
 // Login-free Codex surfaces only list allowlisted native slugs, so external
@@ -743,7 +767,12 @@ export function buildMergedCatalog(native, routedModelsList, { includeNative = t
 // merged-catalog path filters through `selectedConfiguredListedModels()`; this
 // function keeps the same rule for the login-free path instead of trusting its
 // caller to pre-filter, so no future call site can publish dead slots again.
-export function buildLoginFreeCatalog(native, routedModelsList) {
+export function buildLoginFreeCatalog(
+  native,
+  routedModelsList,
+  priorityOverrides = new Map(),
+  labelOverrides = new Map(),
+) {
   const configured = new Set(configuredProviderIds());
   const usableModels = routedModelsList.filter(
     (model) => !model.provider || configured.has(model.provider),
@@ -759,12 +788,16 @@ export function buildLoginFreeCatalog(native, routedModelsList) {
       slug: nativeModel.slug,
       priority: nativeModel.priority,
     })),
-    ...buildMergedCatalog(native, usableModels, { includeNative: false }).map(
+    ...buildMergedCatalog(native, usableModels, {
+      includeNative: false,
+      priorityOverrides,
+      labelOverrides,
+    }).map(
       (model) =>
         aliasedSlugs.has(model.slug) ? { ...model, visibility: "hide" } : model,
     ),
   ];
-  return { models: sortCatalogModels(models), aliases };
+  return { models: sortCatalogModels(models, priorityOverrides, labelOverrides), aliases };
 }
 
 function main() {
@@ -779,6 +812,8 @@ function main() {
   // decision are touched, so this cannot undo a choice already made.
   seedModelsHidden(NATIVE_CONTEXT_VARIANT_SLUGS);
   const hiddenModels = readHiddenModels();
+  const priorityOverrides = readModelPriorities();
+  const labelOverrides = readModelLabels();
   const selectedModels = selectedConfiguredListedModels();
   const multiAgentSettings = readMultiAgentSettings();
   // Demotions first, then this machine's own recorded proofs. Settings still
@@ -852,10 +887,12 @@ function main() {
   );
   const catalogModels = applyVisionBridge(routedModels, visionEngine);
   const { models: merged, aliases } = loginFree
-    ? buildLoginFreeCatalog(native, catalogModels)
+    ? buildLoginFreeCatalog(native, catalogModels, priorityOverrides, labelOverrides)
     : {
         models: buildMergedCatalog(native, routedCatalog ? catalogModels : [], {
           includeNative: openaiAuthenticated,
+          priorityOverrides,
+          labelOverrides,
         }),
         aliases: {},
       };

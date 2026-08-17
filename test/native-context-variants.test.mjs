@@ -29,6 +29,8 @@ const {
   readHiddenModels,
   seedModelsHidden,
   setAllModelsVisible,
+  setModelLabel,
+  setModelPriority,
   setModelVisible,
 } = await import("../src/model-picker-state.mjs");
 
@@ -159,6 +161,8 @@ test("a variant arrives switched off, and stays off until the operator says othe
   // Switched on in the tray, then a catalog rebuild reapplies the default:
   // the choice has to survive, or an update quietly switches it back off.
   setModelVisible("gpt-5.6-sol-1m", true);
+  setModelPriority("gpt-5.6-sol-1m", 2);
+  setModelLabel("gpt-5.6-sol-1m", "GPT-5.6 Sol 1M");
   seedModelsHidden(NATIVE_CONTEXT_VARIANT_SLUGS);
   assert.equal(readHiddenModels().has("gpt-5.6-sol-1m"), false);
 

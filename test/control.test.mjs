@@ -340,6 +340,14 @@ test("picker all accepts the documented show/hide flag position", () => {
     ]),
     ["set", "deepseek/deepseek-v4-flash", "hide"],
   );
+  assert.deepEqual(
+    pickerCommandArgs(["picker", "priority", "grok-oauth/grok-4.6", "4"]),
+    ["priority", "grok-oauth/grok-4.6", "4"],
+  );
+  assert.deepEqual(
+    pickerCommandArgs(["picker", "label", "grok-oauth/grok-4.6", "Grok 4.6"]),
+    ["label", "grok-oauth/grok-4.6", "Grok 4.6"],
+  );
 });
 
 function probeSet(target, providers, provider, desired) {
